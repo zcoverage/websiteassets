@@ -1,1 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f8f9fa;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 20px;
+    }
+    .form-container {
+      width: 100%;
+      max-width: 650px;
+      background: white;
+      padding: 25px 30px;
+      border-radius: 15px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+    #progressBar { height: 8px; background: #e0e0e0; border-radius: 4px; margin-bottom: 20px; overflow: hidden; }
+    #progressFill { height: 100%; width: 0%; background: #0a3d62; transition: width 0.3s ease; }
+    .tab { display: none; }
+    .tab.active { display: block; }
+    label { font-weight: 600; display: block; margin-top: 15px; color: #333; }
+    input, select, textarea { width: 100%; margin-top: 5px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+    .nav-btn, .submit-btn, .add-btn, .remove-btn {
+      background-color: #0a3d62; color: white; padding: 10px 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 14px;
+    }
+    .remove-btn { background-color: #d32f2f; }
+    .nav-group { display: flex; justify-content: space-between; gap: 10px; margin-top: 15px; }
+    .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 999; }
+    .modal-content { background: white; padding: 30px; border-radius: 15px; max-width: 400px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .modal-content h2 { margin-bottom: 15px; color: #0a3d62; }
+    .modal-content p { margin-bottom: 20px; }
+    .modal-content a { text-decoration: none; color: white; background: #0a3d62; padding: 10px 20px; border-radius: 8px; font-weight: bold; }
+    .info-icon { display:inline-block; background:#0a3d62; color:white; border-radius:50%; width:18px; height:18px; text-align:center; font-size:12px; margin-left:5px; cursor:pointer; position:relative; }
+    .tooltip-text { visibility:hidden; background:#333; color:#fff; text-align:left; border-radius:5px; padding:5px 10px; position:absolute; z-index:100; top:25px; left:0; font-size:12px; max-width:250px; }
+    .info-icon:hover .tooltip-text { visibility: visible; }
+    .checkbox-group { display:flex; flex-direction:column; gap:5px; margin-top:5px; }
+  </style>
+</head>
+<body>
+<div class="form-container">
+  <div id="progressBar"><div id="progressFill"></div></div>
+  <form id="quoteForm">
+    <!-- Tab 1 -->
+    <div class="tab active" data-tab="1">
+      <label>Full Name</label><input name="fullname" required placeholder="John Doe">
+      <label>Date of Birth</label><input type="date" name="dob" required>
+      <label>Tobacco Use</label>
+      <select name="tobaccouse" required><option value="">Select</option><option>Yes</option><option>No</option></select>
+      <label>Email</label><input type="email" name="email" required placeholder="email@example.com">
+      <label>Phone</label><input type="tel" name="phone" pattern="\d{10}" title="10-digit number" required>
+      <label>ZIP Code</label><input name="zip" placeholder="12345" required>
+      <label>Coverage Start Date</label><input type="date" name="coveragestartdate" required>
+      <div class="nav-group"><button type="button" class="nav-btn" onclick="nextTab()">Next</button></div>
+    </div>
+
+    <!-- Tab 2 -->
+    <div class="tab" data-tab="2">
+      <label>Household Size</label><input type="number" name="householdsize" min="1" required>
+      <label>Household Income</label>
+      <select name="householdincome" required>
+        <option value="">Select Income Range</option>
+        <option>$0 – $10,000</option>
+        <option>$10,001 – $25,000</option>
+        <option>$25,001 – $50,000</option>
+        <option>$50,001 – $75,000</option>
+        <option>$75,001 – $100,000</option>
+        <option>$100,001+</option>
+      </select>
+      <label>Currently Insured?</label>
+      <select name="currentlyinsured" required><option value="">Select</option><option>Yes</option><option>No</option></select>
+      <button type="button" class="add-btn" onclick="addSpouse()">+ Add Spouse</button>
+      <div id="spouseSection"></div>
+      <button type="button" class="add-btn" onclick="addDependent()">+ Add Dependent</button>
+      <div id="dependentSection"></div>
+      <div class="nav-group"><button type="button" class="nav-btn" onclick="prevTab()">Previous</button><button type="button" class="nav-btn" onclick="nextTab()">Next</button></div>
+    </div>
+
+    <!-- Tab 3 -->
+    <div class="tab" data-tab="3">
+      <label>Primary Care Physician</label><input name="primarycarephysician" placeholder="Dr. Smith">
+      <label>Pre-existing Conditions</label><textarea name="preexistingconditions" placeholder="If any"></textarea>
+      <label>Prescription Medications</label><textarea name="prescriptionmedications" placeholder="List medications"></textarea>
+
+      <label>Insurance Type (select all that apply)</label>
+      <div class="checkbox-group">
+        <label><input type="checkbox" name="insurancetype" value="Marketplace"> Marketplace (ACA / Obamacare Plans)</label>
+        <label><input type="checkbox" name="insurancetype" value="Private Health Insurance"> Private Health Insurance</label>
+        <label><input type="checkbox" name="insurancetype" value="Medicare"> Medicare</label>
+        <label><input type="checkbox" name="insurancetype" value="Prescription Drug"> Prescription Drug (Part D)</label>
+        <label><input type="checkbox" name="insurancetype" value="Dental Coverage"> Dental Coverage</label>
+        <label><input type="checkbox" name="insurancetype" value="Vision Coverage"> Vision Coverage</label>
+        <label><input type="checkbox" name="insurancetype" value="Accident / Disability Coverage"> Accident / Disability Coverage</label>
+        <label><input type="checkbox" name="insurancetype" value="Critical Illness / Hospital Indemnity Coverage"> Critical Illness / Hospital Indemnity Coverage</label>
+        <label><input type="checkbox" name="insurancetype" value="Special Enrollment"> Special Enrollment</label>
+        <div id="specialEnrollmentOptions" style="display:none; margin-left:20px;">
+          <label><input type="checkbox" name="specialevent" value="Lost Coverage"> Lost Coverage</label>
+          <label><input type="checkbox" name="specialevent" value="Marriage"> Marriage</label>
+          <label><input type="checkbox" name="specialevent" value="New Child / Adoption"> New Child / Adoption</label>
+          <label><input type="checkbox" name="specialevent" value="Relocation / Move"> Relocation / Move</label>
+          <label><input type="checkbox" name="specialevent" value="Other"> Other</label>
+          <input type="text" id="specialOtherText" placeholder="Please describe" style="display:none; margin-top:5px;">
+        </div>
+        <label><input type="checkbox" name="insurancetype" value="Other"> Other</label>
+        <input type="text" id="otherText" placeholder="Please describe" style="display:none; margin-top:5px;">
+      </div>
+      <div class="nav-group"><button type="button" class="nav-btn" onclick="prevTab()">Previous</button><button type="button" class="nav-btn" onclick="nextTab()">Next</button></div>
+    </div>
+
+    <!-- Tab 4 -->
+    <div class="tab" data-tab="4">
+      <label>Additional Notes</label><textarea name="notes"></textarea>
+      <label>Preferred Contact Method</label>
+      <select name="preferredcontactmethod">
+        <option value="">Select</option><option>Phone</option><option>Email</option>
+      </select>
+      <label>Best Time to Contact</label><input name="besttimetocontact" placeholder="Ex: Morning, Evening">
+      <div class="nav-group"><button type="button" class="nav-btn" onclick="prevTab()">Previous</button></div>
+      <button type="button" class="submit-btn" onclick="submitForm()">Submit</button>
+    </div>
+  </form>
+</div>
+
+<!-- Modals -->
+<div class="modal" id="thankYouModal">
+  <div class="modal-content">
+    <h2>Thank You!</h2>
+    <p>Your submission has been received. Our team will contact you shortly.</p>
+    <a href="https://sites.google.com/zcoverage.com/agency/home">Back to Homepage</a>
+  </div>
+</div>
+<div class="modal" id="errorModal">
+  <div class="modal-content">
+    <h2 style="color:#d32f2f;">Error</h2>
+    <p>Something went wrong. Please try again.</p>
+    <a href="#" onclick="document.getElementById('errorModal').style.display='none'">Close</a>
+  </div>
+</div>
+
+<script>
+let currentTab=0; const tabs=document.querySelectorAll('.tab'); showTab(currentTab);
+function showTab(n){ tabs.forEach((tab,i)=>tab.classList.toggle('active', i===n)); document.getElementById('progressFill').style.width=((n+1)/tabs.length)*100+'%'; }
+function nextTab(){ if(validateTab()){ currentTab=Math.min(currentTab+1,tabs.length-1); showTab(currentTab);} }
+function prevTab(){ currentTab=Math.max(currentTab-1,0); showTab(currentTab);}
+function validateTab(){ const inputs=tabs[currentTab].querySelectorAll('input[required], select[required]'); for(const inp of inputs){ if(!inp.value){ inp.style.borderColor='red'; inp.focus(); return false;} else inp.style.borderColor='#ccc';} return true;}
+
+let depIds=[];
+function addSpouse(){ document.getElementById('spouseSection').innerHTML=`<h4>Spouse Information</h4><button type="button" class="remove-btn" onclick="removeSpouse()">Remove Spouse</button><label>Full Name</label><input name="spouseFullName"><label>Date of Birth</label><input type="date" name="spouseDob"><label>Tobacco Use</label><select name="spouseTobaccoUse"><option value="">Select</option><option>Yes</option><option>No</option></select>`; }
+function removeSpouse(){ document.getElementById('spouseSection').innerHTML=''; }
+function addDependent(){ let id=1; while(depIds.includes(id)) id++; depIds.push(id); const container=document.getElementById('dependentSection'); const div=document.createElement('div'); div.id='dependent-'+id; div.innerHTML=`<h4>Dependent</h4><button type="button" class="remove-btn" onclick="removeDependent(${id})">Remove Dependent</button><label>Full Name</label><input name="dependentFullName-${id}"><label>Date of Birth</label><input type="date" name="dependentDob-${id}"><label>Relationship</label><input name="dependentRelationship-${id}">`; container.appendChild(div); }
+function removeDependent(id){ const div=document.getElementById('dependent-'+id); if(div){ div.remove(); depIds=depIds.filter(d=>d!==id);} }
+
+document.querySelectorAll('input[name="insurancetype"]').forEach(cb=>{ cb.addEventListener('change',()=>{ const se=document.getElementById('specialEnrollmentOptions'); se.style.display=document.querySelector('input[name="insurancetype"][value="Special Enrollment"]').checked?'block':'none';});});
+document.querySelector('input[value="Other"][name="insurancetype"]').addEventListener('change',e=>{ document.getElementById('otherText').style.display=e.target.checked?'block':'none';});
+document.querySelector('#specialEnrollmentOptions input[value="Other"]').addEventListener('change',e=>{ document.getElementById('specialOtherText').style.display=e.target.checked?'block':'none';});
+
+function submitForm(){
+  if(!validateTab()){ alert("Please fill required fields."); return; }
+  const form=document.getElementById('quoteForm');
+  const rawData=Object.fromEntries(new FormData(form));
+  const data={ applicant:{}, spouse:null, dependents:[] };
+
+  Object.entries(rawData).forEach(([k,v])=>{
+    if(k.startsWith('spouse')){ if(!data.spouse)data.spouse={}; data.spouse[k.replace('spouse','').toLowerCase()]=v;}
+    else if(k.startsWith('dependent')){ const [field,index]=k.replace('dependent','').split('-'); const i=parseInt(index)-1; if(!data.dependents[i]) data.dependents[i]={}; data.dependents[i][field.toLowerCase()]=v; }
+    else data.applicant[k.toLowerCase()]=v;
+  });
+
+  if(data.spouse && !Object.values(data.spouse).some(v=>v&&v.trim()!=='')) data.spouse=null;
+  data.dependents = data.dependents.filter(d=>Object.values(d).some(v=>v&&v.trim()!==''));
+
+  fetch('https://script.google.com/macros/s/YOUR_WEBAPP_ID/exec', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(data)
+  })
+  .then(res=>res.json())
+  .then(resp=>{
+    if(resp.success){
+      document.getElementById('thankYouModal').style.display='flex';
+      form.reset(); document.getElementById('spouseSection').innerHTML=''; document.getElementById('dependentSection').innerHTML=''; depIds=[];
+    } else { document.getElementById('errorModal').style.display='flex'; console.error(resp.error);}
+  })
+  .catch(err=>{ document.getElementById('errorModal').style.display='flex'; console.error(err); });
+}
+</script>
+</body>
+</html>
 
